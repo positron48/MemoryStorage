@@ -1,5 +1,5 @@
 <?php
-namespace positron48\MemoryStorage;
+namespace MemoryStorage;
 
 use malkusch\lock\mutex\SemaphoreMutex;
 
