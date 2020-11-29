@@ -3,7 +3,7 @@ require "classes/ArrayMemoryStorage.php";
 
 /**
  * Class Test
- * @covers \positron48\MemoryStorage\ArrayMemoryStorage
+ * @covers \MemoryStorage\ArrayMemoryStorage
  */
 class Test extends \PHPUnit\Framework\TestCase
 {
@@ -12,7 +12,7 @@ class Test extends \PHPUnit\Framework\TestCase
      */
     public function testOne()
     {
-        $memory = new \positron48\MemoryStorage\ArrayMemoryStorage('1_counter', 3);
+        $memory = new \MemoryStorage\ArrayMemoryStorage('1_counter', 3);
         $this->assertEquals([-1, -1, -1], $memory->get());
 
         $time = time();
@@ -30,8 +30,8 @@ class Test extends \PHPUnit\Framework\TestCase
      */
     public function testMany()
     {
-        $memory = new \positron48\MemoryStorage\ArrayMemoryStorage('1_counter', 3);
-        $memory2 = new \positron48\MemoryStorage\ArrayMemoryStorage('2_counter', 3);
+        $memory = new \MemoryStorage\ArrayMemoryStorage('1_counter', 3);
+        $memory2 = new \MemoryStorage\ArrayMemoryStorage('2_counter', 3);
         $this->assertEquals([-1, -1, -1], $memory->get());
         $this->assertEquals([-1, -1, -1], $memory2->get());
 
@@ -54,7 +54,7 @@ class Test extends \PHPUnit\Framework\TestCase
 
     public function testFail()
     {
-        $memory = new \positron48\MemoryStorage\ArrayMemoryStorage('1_counter', 3);
+        $memory = new \MemoryStorage\ArrayMemoryStorage('1_counter', 3);
 
         $memory->remove();
 
