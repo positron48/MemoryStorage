@@ -90,6 +90,14 @@ class ArrayMemoryStorage
     }
 
     /**
+     * @return SemaphoreMutex
+     */
+    public function getMutex()
+    {
+        return $this->mutex;
+    }
+
+    /**
      * @throws \Exception
      */
     protected function attach()
