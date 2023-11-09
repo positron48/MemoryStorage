@@ -110,7 +110,7 @@ class ArrayMemoryStorage
         }
 
         $this->memory = shm_attach($this->key, $this->getMemSize());
-        if (!is_resource($this->memory)) {
+        if ($this->memory === false) {
             throw new \Exception("Failed to attach to shared memory.");
         }
     }
