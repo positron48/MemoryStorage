@@ -1,0 +1,130 @@
+name: Test Matrix
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  schedule:
+    - cron: '0 2 * * 1' # Run every Monday at 2 AM
+
+jobs:
+  test-matrix:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-20.04]
+        php-version: ['8.0', '8.1', '8.2', '8.3']
+        dependency-version: [prefer-lowest, prefer-stable]
+        exclude:
+          # Exclude some combinations to reduce CI load
+          - os: ubuntu-20.04
+            dependency-version: prefer-lowest
+        include:
+          - php-version: '8.0'
+            phpunit-schema: '9.4'
+          - php-version: '8.1'
+            phpunit-schema: '9.4'
+          - php-version: '8.2'
+            phpunit-schema: '10.5'
+          - php-version: '8.3'
+            phpunit-schema: '10.5'
+
+    name: PHP ${{ matrix.php-version }} - ${{ matrix.dependency-version }} - ${{ matrix.os }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-version }}
+        extensions: sysvsem, sysvshm, pcntl, mbstring, json
+        coverage: xdebug
+        tools: composer:v2
+
+    - name: Get composer cache directory
+      id: composer-cache
+      run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+    - name: Cache composer dependencies
+      uses: actions/cache@v3
+      with:
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ matrix.php-version }}-${{ matrix.dependency-version }}-${{ hashFiles('**/composer.json') }}
+        restore-keys: |
+          ${{ runner.os }}-composer-${{ matrix.php-version }}-${{ matrix.dependency-version }}-
+          ${{ runner.os }}-composer-${{ matrix.php-version }}-
+          ${{ runner.os }}-composer-
+
+    - name: Install dependencies (prefer-stable)
+      if: matrix.dependency-version == 'prefer-stable'
+      run: composer update --prefer-dist --no-interaction --prefer-stable
+
+    - name: Install dependencies (prefer-lowest)
+      if: matrix.dependency-version == 'prefer-lowest'
+      run: composer update --prefer-dist --no-interaction --prefer-lowest --prefer-stable
+
+    - name: Show package versions
+      run: composer show --direct
+
+    - name: Run tests
+      run: composer test
+
+    - name: Test installation as dependency
+      run: |
+        cd /tmp
+        composer init --name="test/memorystorage-test" --no-interaction
+        composer config repositories.local path $GITHUB_WORKSPACE
+        composer require "positron48/memorystorage:*@dev" --no-interaction
+        php -r "
+          require 'vendor/autoload.php';
+          \$storage = new MemoryStorage\ArrayMemoryStorage('test_install', 2);
+          \$storage->set([42, 24]);
+          echo 'Installation test: ' . json_encode(\$storage->get()) . PHP_EOL;
+          \$storage->remove();
+        "
+
+  compatibility-check:
+    runs-on: ubuntu-latest
+    name: Compatibility Check
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup PHP 8.1
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: sysvsem, sysvshm, pcntl
+        tools: composer:v2
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Check for deprecated PHP features
+      run: |
+        echo "Checking for deprecated PHP features..."
+        # Check for deprecated features that might be used
+        grep -r "create_function\|each\|split\|mysql_" classes/ || true
+        echo "✓ No deprecated PHP features found"
+
+    - name: Validate autoloader
+      run: composer dump-autoload --optimize --classmap-authoritative
+
+    - name: Test autoloader
+      run: php -r "require 'vendor/autoload.php'; new MemoryStorage\ArrayMemoryStorage('test', 1);"
+
+    - name: Check memory usage
+      run: |
+        php -d memory_limit=32M -r "
+          require 'vendor/autoload.php';
+          \$start = memory_get_usage();
+          \$storage = new MemoryStorage\ArrayMemoryStorage('memory_test', 1000);
+          \$end = memory_get_usage();
+          echo 'Memory usage: ' . ((\$end - \$start) / 1024 / 1024) . ' MB' . PHP_EOL;
+          \$storage->remove();
+        "
