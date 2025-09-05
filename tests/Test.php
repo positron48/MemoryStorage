@@ -12,85 +12,73 @@ use PHPUnit\Framework\TestCase;
 class Test extends TestCase
 {
     /**
-     * Test that demonstrates PHP version compatibility
+     * Test basic functionality
      */
-    public function testPHPVersionCompatibility()
+    public function testBasicFunctionality()
     {
-        $phpVersion = PHP_VERSION;
+        $storage = new ArrayMemoryStorage('1_counter', 3);
         
-        try {
-            $storage = new ArrayMemoryStorage('1_counter', 3);
-            
-            // If we get here, the library works on this PHP version!
-            $this->assertTrue(true, "Library works on PHP {$phpVersion}");
-            
-            // Test basic functionality
-            $initialData = $storage->get();
-            $this->assertIsArray($initialData);
-            $this->assertCount(3, $initialData);
-            
-            // Test setting data
-            $testData = [100, 200, 300];
-            $storage->set($testData);
-            $this->assertEquals($testData, $storage->get());
-            
-            $storage->remove();
-            
-        } catch (\Exception $e) {
-            // Library doesn't work on this PHP version
-            $isMemoryError = str_contains($e->getMessage(), 'Could not store in shared memory') ||
-                           str_contains($e->getMessage(), 'Not enough shared memory left');
-            
-            if ($isMemoryError) {
-                $this->markTestSkipped(
-                    "Library has memory allocation issues on PHP {$phpVersion}: " . $e->getMessage()
-                );
-            } else {
-                throw $e; // Re-throw if it's not a memory error
-            }
-        }
+        // Test initial data
+        $initialData = $storage->get();
+        $this->assertIsArray($initialData);
+        $this->assertCount(3, $initialData);
+        
+        // Test setting data
+        $testData = [100, 200, 300];
+        $storage->set($testData);
+        $this->assertEquals($testData, $storage->get());
+        
+        // Test updating data
+        $testData2 = [400, 500, 600];
+        $storage->set($testData2);
+        $this->assertEquals($testData2, $storage->get());
+        
+        $storage->remove();
     }
 
     /**
-     * Test that the class can be instantiated (even if it fails due to memory issues)
+     * Test multiple storage instances
      */
-    public function testClassInstantiationAttempt()
+    public function testMultipleStorageInstances()
     {
-        try {
-            new ArrayMemoryStorage('test_counter', 1);
-            $this->fail('Expected exception was not thrown');
-        } catch (\Exception $e) {
-            // Accept either error message as both indicate memory allocation issues
-            $this->assertTrue(
-                str_contains($e->getMessage(), 'Could not store in shared memory') ||
-                str_contains($e->getMessage(), 'Not enough shared memory left'),
-                'Expected memory allocation error, got: ' . $e->getMessage()
-            );
-        }
+        $storage1 = new ArrayMemoryStorage('storage_1', 2);
+        $storage2 = new ArrayMemoryStorage('storage_2', 2);
+        
+        // Set different data in each storage
+        $data1 = [10, 20];
+        $data2 = [30, 40];
+        
+        $storage1->set($data1);
+        $storage2->set($data2);
+        
+        // Verify they don't interfere with each other
+        $this->assertEquals($data1, $storage1->get());
+        $this->assertEquals($data2, $storage2->get());
+        
+        $storage1->remove();
+        $storage2->remove();
     }
 
     /**
-     * Test that documents the expected behavior when the library works
+     * Test mutex functionality
      */
-    public function testExpectedBehaviorWhenWorking()
+    public function testMutexFunctionality()
     {
-        $this->markTestSkipped(
-            'This test is skipped because the current library implementation has a memory ' .
-            'allocation bug that prevents it from working. When fixed, this test should pass.'
-        );
+        $storage = new ArrayMemoryStorage('mutex_test', 2);
+        $mutex = $storage->getMutex();
         
-        // This is what should work when the memory allocation is fixed:
-        /*
-        $memory = new ArrayMemoryStorage('1_counter', 3);
-        $initialValues = $memory->get(); // Should return initial values
-        $this->assertIsArray($initialValues);
-        $this->assertCount(3, $initialValues);
-
-        $time = time();
-        $memory->set([$time, $time, 0]);
-        $this->assertEquals([$time, $time, 0], $memory->get());
-
-        $memory->remove();
-        */
+        $this->assertInstanceOf(\malkusch\lock\mutex\SemaphoreMutex::class, $mutex);
+        
+        // Test synchronized execution
+        $executed = false;
+        $mutex->synchronized(function () use (&$executed, $storage) {
+            $executed = true;
+            $storage->set([1, 2]);
+        });
+        
+        $this->assertTrue($executed);
+        $this->assertEquals([1, 2], $storage->get());
+        
+        $storage->remove();
     }
 }

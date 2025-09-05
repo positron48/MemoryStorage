@@ -13,30 +13,17 @@ class ArrayMemoryStorageWorkingTest extends TestCase
 {
     public function testLibraryInstantiation(): void
     {
-        $phpVersion = PHP_VERSION;
+        $storage = new ArrayMemoryStorage('test_instantiation', 1);
         
-        try {
-            $storage = new ArrayMemoryStorage('test_instantiation', 1);
-            
-            // If we get here, the library works on this PHP version!
-            $this->assertTrue(true, "Library instantiation successful on PHP {$phpVersion}");
-            
-            // Clean up
-            $storage->remove();
-            
-        } catch (\Exception $e) {
-            // Library doesn't work on this PHP version
-            $isMemoryError = str_contains($e->getMessage(), 'Could not store in shared memory') ||
-                           str_contains($e->getMessage(), 'Not enough shared memory left');
-            
-            if ($isMemoryError) {
-                $this->markTestSkipped(
-                    "Library has memory allocation issues on PHP {$phpVersion}: " . $e->getMessage()
-                );
-            } else {
-                throw $e; // Re-throw if it's not a memory error
-            }
-        }
+        // If we get here, the library works!
+        $this->assertInstanceOf(ArrayMemoryStorage::class, $storage);
+        
+        // Test basic functionality
+        $data = $storage->get();
+        $this->assertIsArray($data);
+        
+        // Clean up
+        $storage->remove();
     }
 
     public function testClassExists(): void
@@ -146,17 +133,18 @@ class ArrayMemoryStorageWorkingTest extends TestCase
     }
 
     /**
-     * This test documents the current limitation of the library on PHP 8.3
+     * Test data validation
      */
-    public function testKnownMemoryLimitationOnPHP83(): void
+    public function testDataValidation(): void
     {
-        $phpVersion = PHP_VERSION;
-        $this->markTestSkipped(
-            "The current implementation of ArrayMemoryStorage has a memory allocation issue " .
-            "on PHP {$phpVersion}. The library was designed for PHP 8.0 and may have " .
-            "compatibility issues with newer PHP versions due to changes in shared memory " .
-            "handling or the getMemSize() calculation method."
-        );
+        $storage = new ArrayMemoryStorage('validation_test', 3);
+        
+        // Test invalid data length - too short
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Data lenght is not 3');
+        $storage->set([1, 2]); // Only 2 elements instead of 3
+        
+        $storage->remove();
     }
 
     /**

@@ -58,12 +58,11 @@ jobs:
     - name: Run test suite
       run: |
         echo "Running tests on PHP ${{ matrix.php-version }}"
-        composer run-script test || echo "Tests completed with issues (expected for current library state)"
+        composer run-script test
 
     - name: Run tests with coverage
       if: matrix.php-version == '8.1'
-      run: |
-        vendor/bin/phpunit --coverage-clover=coverage.xml || echo "Coverage run completed with issues (expected for current library state)"
+      run: vendor/bin/phpunit --coverage-clover=coverage.xml
 
     - name: Upload coverage reports to Codecov
       if: matrix.php-version == '8.1'
