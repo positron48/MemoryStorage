@@ -1,9 +1,6 @@
 # MemoryStorage
 
 [![CI](https://github.com/positron48/memorystorage/workflows/CI/badge.svg)](https://github.com/positron48/memorystorage/actions)
-[![PHP Version Require](http://poser.pugx.org/positron48/memorystorage/require/php)](https://packagist.org/packages/positron48/memorystorage)
-[![Latest Stable Version](http://poser.pugx.org/positron48/memorystorage/v)](https://packagist.org/packages/positron48/memorystorage)
-[![License](http://poser.pugx.org/positron48/memorystorage/license)](https://packagist.org/packages/positron48/memorystorage)
 
 Library that will help you to store data in shared memory using PHP's System V shared memory functions.
 
