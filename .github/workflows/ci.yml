@@ -65,14 +65,6 @@ jobs:
         echo "Generating coverage report for PHP ${{ matrix.php-version }}"
         vendor/bin/phpunit --coverage-clover=coverage-${{ matrix.php-version }}.xml --coverage-text
 
-    - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./coverage-${{ matrix.php-version }}.xml
-        flags: unittests,php-${{ matrix.php-version }}
-        name: php-${{ matrix.php-version }}
-        fail_ci_if_error: false
-
     - name: Archive coverage results
       uses: actions/upload-artifact@v4
       with:
@@ -109,14 +101,6 @@ jobs:
       with:
         name: coverage-html-report
         path: coverage-html/
-    
-    - name: Upload summary to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./coverage-summary.xml
-        flags: summary
-        name: coverage-summary
-        fail_ci_if_error: false
 
   code-quality:
     runs-on: ubuntu-latest
