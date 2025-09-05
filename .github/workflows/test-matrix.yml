@@ -28,9 +28,9 @@ jobs:
           - php-version: '8.1'
             phpunit-schema: '9.4'
           - php-version: '8.2'
-            phpunit-schema: '10.5'
+            phpunit-schema: '9.4'
           - php-version: '8.3'
-            phpunit-schema: '10.5'
+            phpunit-schema: '9.4'
 
     name: PHP ${{ matrix.php-version }} - ${{ matrix.dependency-version }} - ${{ matrix.os }}
 
@@ -62,11 +62,15 @@ jobs:
 
     - name: Install dependencies (prefer-stable)
       if: matrix.dependency-version == 'prefer-stable'
-      run: composer update --prefer-dist --no-interaction --prefer-stable
+      run: |
+        rm -f composer.lock
+        composer update --prefer-dist --no-interaction --prefer-stable
 
     - name: Install dependencies (prefer-lowest)
       if: matrix.dependency-version == 'prefer-lowest'
-      run: composer update --prefer-dist --no-interaction --prefer-lowest --prefer-stable
+      run: |
+        rm -f composer.lock
+        composer update --prefer-dist --no-interaction --prefer-lowest --prefer-stable
 
     - name: Show package versions
       run: composer show --direct

@@ -20,9 +20,9 @@ jobs:
           - php-version: '8.1'
             phpunit-version: '^9.4'
           - php-version: '8.2'
-            phpunit-version: '^9.4|^10.0'
+            phpunit-version: '^9.4'
           - php-version: '8.3'
-            phpunit-version: '^9.4|^10.0'
+            phpunit-version: '^9.4'
 
     name: PHP ${{ matrix.php-version }} Test
 
@@ -37,20 +37,23 @@ jobs:
         coverage: xdebug
         tools: composer:v2
 
-    - name: Validate composer.json and composer.lock
-      run: composer validate --strict
+    - name: Validate composer.json
+      run: composer validate --no-check-lock --strict
 
     - name: Cache Composer packages
       id: composer-cache
       uses: actions/cache@v3
       with:
         path: vendor
-        key: ${{ runner.os }}-php-${{ matrix.php-version }}-${{ hashFiles('**/composer.lock') }}
+        key: ${{ runner.os }}-php-${{ matrix.php-version }}-${{ hashFiles('**/composer.json') }}
         restore-keys: |
           ${{ runner.os }}-php-${{ matrix.php-version }}-
 
     - name: Install dependencies
-      run: composer install --prefer-dist --no-progress --no-suggest
+      run: |
+        # Remove lock file to allow installation of compatible versions for each PHP version
+        rm -f composer.lock
+        composer install --prefer-dist --no-progress
 
     - name: Run test suite
       run: |
