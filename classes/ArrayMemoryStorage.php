@@ -134,9 +134,13 @@ class ArrayMemoryStorage
 
     protected function getMemSize()
     {
-        $header = 24; // actually 4*4 + 8
-        $dataLength = (ceil(strlen(serialize($this->getEmptyVar())) / 4) * 4) + 16;
-        return $header + $dataLength;
+        // Calculate actual size needed for packed data
+        $dataSize = $this->length * 4; // 4 bytes per integer
+        
+        // Add reasonable overhead for shm_put_var (based on testing, 1KB is usually enough)
+        $overhead = 1024;
+        
+        return $dataSize + $overhead;
     }
 
     /**
@@ -145,8 +149,10 @@ class ArrayMemoryStorage
     protected function getEmptyVar(): array
     {
         $initArray = [];
+        // Use 32-bit signed integer max value since pack("i*") uses 32-bit integers
+        $int32Max = 2147483647; // 2^31 - 1
         for ($i = 0; $i < $this->length; $i++) {
-            $initArray[] = PHP_INT_MAX;
+            $initArray[] = $int32Max;
         }
         return $initArray;
     }

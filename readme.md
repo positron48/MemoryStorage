@@ -56,44 +56,6 @@ $mutex->synchronized(function () use ($storage) {
 $storage->remove();
 ```
 
-## Testing
-
-The library includes comprehensive tests that work within the current library limitations:
-
-```bash
-# Run tests
-composer test
-
-# Run tests with coverage
-composer test-coverage
-
-# Run specific test file
-vendor/bin/phpunit tests/ArrayMemoryStorageWorkingTest.php
-```
-
-**Test Results**: All tests pass successfully, including:
-- Class structure and method signature validation
-- Dependency and system function checks  
-- Error handling for known memory allocation issues
-- PHP version compatibility testing
-
-**Note**: The tests are designed to work with the current library state and document known limitations rather than testing full functionality due to the memory allocation bug.
-
-## Supported PHP Versions
-
-This library is tested against:
-- ✅ **PHP 8.0** - Fully supported (original target version)
-- ✅ **PHP 8.1** - Fully supported and working
-- ❓ **PHP 8.2** - May have compatibility issues  
-- ❌ **PHP 8.3** - Known memory allocation issues
-
-**Compatibility Status**:
-- **Working versions**: PHP 8.0-8.1 - Full functionality available
-- **Problematic versions**: PHP 8.2+ - Memory allocation bug prevents initialization
-- **Recommended**: Use PHP 8.0 or 8.1 for production
-
-The memory allocation issue appears to be related to changes in shared memory handling in newer PHP versions.
-
 ## Development
 
 ### Running Tests Locally
