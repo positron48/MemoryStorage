@@ -82,12 +82,17 @@ vendor/bin/phpunit tests/ArrayMemoryStorageWorkingTest.php
 ## Supported PHP Versions
 
 This library is tested against:
-- PHP 8.0 (recommended - library was originally designed for this version)
-- PHP 8.1  
-- PHP 8.2
-- PHP 8.3 (may have compatibility issues due to changes in shared memory handling)
+- ✅ **PHP 8.0** - Fully supported (original target version)
+- ✅ **PHP 8.1** - Fully supported and working
+- ❓ **PHP 8.2** - May have compatibility issues  
+- ❌ **PHP 8.3** - Known memory allocation issues
 
-**Note**: The current implementation has known limitations on newer PHP versions due to memory allocation calculations. The library works best on PHP 8.0 for which it was originally designed.
+**Compatibility Status**:
+- **Working versions**: PHP 8.0-8.1 - Full functionality available
+- **Problematic versions**: PHP 8.2+ - Memory allocation bug prevents initialization
+- **Recommended**: Use PHP 8.0 or 8.1 for production
+
+The memory allocation issue appears to be related to changes in shared memory handling in newer PHP versions.
 
 ## Development
 
