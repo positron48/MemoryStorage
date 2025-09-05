@@ -16,17 +16,20 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Test with oldest supported dependencies on PHP 8.0
           - php-version: '8.0'
             os: ubuntu-latest
-            dependency-version: prefer-lowest
-          # Test with newest dependencies on PHP 8.3
+            dependency-version: prefer-stable
+          - php-version: '8.1'
+            os: ubuntu-latest
+            dependency-version: prefer-stable
+          - php-version: '8.2'
+            os: ubuntu-latest
+            dependency-version: prefer-stable
           - php-version: '8.3'
             os: ubuntu-latest
             dependency-version: prefer-stable
-          # Test on older Ubuntu
-          - php-version: '8.1'
-            os: ubuntu-20.04
+          - php-version: '8.4'
+            os: ubuntu-latest
             dependency-version: prefer-stable
 
     name: PHP ${{ matrix.php-version }} - ${{ matrix.dependency-version }} - ${{ matrix.os }}
