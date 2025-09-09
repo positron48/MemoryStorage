@@ -160,8 +160,7 @@ class ArrayMemoryStorageWorkingTest extends TestCase
         // Document which PHP versions this test is running on
         $this->addToAssertionCount(1); // Count this as a successful assertion
         
-        // Log the PHP version for debugging
-        fwrite(STDERR, "Running tests on PHP {$phpVersion}\n");
+        // PHP version compatibility check
         
         if (version_compare($phpVersion, '8.0.0', '<')) {
             $this->markTestSkipped("PHP version {$phpVersion} is below minimum requirement of 8.0");

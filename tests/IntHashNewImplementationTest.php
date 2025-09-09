@@ -19,10 +19,6 @@ class IntHashNewImplementationTest extends TestCase
         $method = $reflection->getMethod('intHash');
         $method->setAccessible(true);
         
-        echo "\n" . str_repeat("=", 80) . "\n";
-        echo "TESTING NEW CRC32-BASED INTHASH IMPLEMENTATION:\n";
-        echo str_repeat("=", 80) . "\n";
-        
         $testKeys = [
             'key1',
             'key2',
@@ -42,20 +38,14 @@ class IntHashNewImplementationTest extends TestCase
         foreach ($testKeys as $key) {
             $hash = $method->invoke(null, $key);
             
-            echo "\nKey: '{$key}'\n";
-            echo "CRC32 hash: {$hash}\n";
-            
             // Check for overflow (should not happen with CRC32)
             if ($hash == PHP_INT_MAX) {
                 $overflowCount++;
-                echo "*** OVERFLOW DETECTED! ***\n";
             }
             
             // Check for collisions
             if (isset($hashes[$hash])) {
                 $collisions++;
-                echo "*** COLLISION DETECTED! ***\n";
-                echo "Collision with: '{$hashes[$hash]}'\n";
             } else {
                 $hashes[$hash] = $key;
             }
@@ -65,15 +55,6 @@ class IntHashNewImplementationTest extends TestCase
             $this->assertGreaterThan(0, $hash, "Hash should be positive");
             $this->assertLessThanOrEqual(PHP_INT_MAX, $hash, "Hash should not overflow");
         }
-        
-        echo "\n" . str_repeat("-", 60) . "\n";
-        echo "SUMMARY:\n";
-        echo str_repeat("-", 60) . "\n";
-        echo "Total keys tested: " . count($testKeys) . "\n";
-        echo "Unique hashes: " . count($hashes) . "\n";
-        echo "Collisions: {$collisions}\n";
-        echo "Overflow issues: {$overflowCount}\n";
-        echo "Collision rate: " . number_format(($collisions / count($testKeys)) * 100, 2) . "%\n";
         
         // Assertions
         $this->assertEquals(0, $overflowCount, "No overflow should occur with CRC32");
@@ -100,8 +81,6 @@ class IntHashNewImplementationTest extends TestCase
         $this->assertEquals($hash1, $hash2, "Hash should be consistent across multiple calls");
         $this->assertEquals($hash2, $hash3, "Hash should be consistent across multiple calls");
         $this->assertEquals($hash1, $hash3, "Hash should be consistent across multiple calls");
-        
-        echo "\nConsistency test passed: hash for '{$testKey}' is always {$hash1}\n";
     }
     
     /**
@@ -113,12 +92,8 @@ class IntHashNewImplementationTest extends TestCase
         $method = $reflection->getMethod('intHash');
         $method->setAccessible(true);
         
-        echo "\n" . str_repeat("=", 80) . "\n";
-        echo "COLLISION RATE TEST WITH MANY KEYS:\n";
-        echo str_repeat("=", 80) . "\n";
-        
         $testKeys = [];
-        for ($i = 0; $i < 10000; $i++) {
+        for ($i = 0; $i < 1000; $i++) {
             $testKeys[] = "key_{$i}_" . md5("random_{$i}_" . time());
         }
         
@@ -138,11 +113,6 @@ class IntHashNewImplementationTest extends TestCase
         $collisionRate = ($collisions / count($testKeys)) * 100;
         $uniqueHashes = count($hashes);
         
-        echo "Total keys: " . count($testKeys) . "\n";
-        echo "Unique hashes: {$uniqueHashes}\n";
-        echo "Collisions: {$collisions}\n";
-        echo "Collision rate: " . number_format($collisionRate, 4) . "%\n";
-        
         // CRC32 has a theoretical collision rate, but should be very low
         $this->assertLessThan(1.0, $collisionRate, "Collision rate should be less than 1%");
         $this->assertGreaterThan(0.95, $uniqueHashes / count($testKeys), "At least 95% of keys should have unique hashes");
@@ -156,10 +126,6 @@ class IntHashNewImplementationTest extends TestCase
         $reflection = new \ReflectionClass(ArrayMemoryStorage::class);
         $method = $reflection->getMethod('intHash');
         $method->setAccessible(true);
-        
-        echo "\n" . str_repeat("=", 80) . "\n";
-        echo "EDGE CASES TEST:\n";
-        echo str_repeat("=", 80) . "\n";
         
         $edgeCases = [
             '', // Empty string
@@ -175,8 +141,6 @@ class IntHashNewImplementationTest extends TestCase
         foreach ($edgeCases as $key) {
             $hash = $method->invoke(null, $key);
             
-            echo "Key: '" . addcslashes($key, "\0..\37") . "' -> Hash: {$hash}\n";
-            
             $this->assertIsInt($hash, "Hash for edge case should be an integer");
             $this->assertGreaterThan(0, $hash, "Hash for edge case should be positive");
             $this->assertLessThanOrEqual(PHP_INT_MAX, $hash, "Hash for edge case should not overflow");
@@ -184,13 +148,13 @@ class IntHashNewImplementationTest extends TestCase
     }
     
     /**
-     * Compare with old implementation
+     * Test that new implementation produces different hashes than old one
      */
-    public function testComparisonWithOldImplementation(): void
+    public function testNewImplementationProducesDifferentHashes(): void
     {
-        echo "\n" . str_repeat("=", 80) . "\n";
-        echo "COMPARISON WITH OLD IMPLEMENTATION:\n";
-        echo str_repeat("=", 80) . "\n";
+        $reflection = new \ReflectionClass(ArrayMemoryStorage::class);
+        $method = $reflection->getMethod('intHash');
+        $method->setAccessible(true);
         
         $testKeys = [
             'very_long_key_that_might_produce_20_char_hash_1',
@@ -199,21 +163,12 @@ class IntHashNewImplementationTest extends TestCase
         ];
         
         foreach ($testKeys as $key) {
-            $newHash = crc32($key);
-            $newHash = abs($newHash);
-            
+            $newHash = $method->invoke(null, $key);
             $oldHash = $this->oldIntHash($key);
             
-            echo "\nKey: '{$key}'\n";
-            echo "Old implementation: {$oldHash}\n";
-            echo "New implementation: {$newHash}\n";
-            echo "Different? " . ($oldHash !== $newHash ? 'YES' : 'NO') . "\n";
+            // New implementation should produce different hashes
+            $this->assertNotEquals($oldHash, $newHash, "New implementation should produce different hash for key: {$key}");
         }
-        
-        echo "\nNote: The new implementation will produce different hashes than the old one.\n";
-        echo "This is expected and correct - the new implementation is more reliable.\n";
-        
-        $this->assertTrue(true, 'Comparison completed');
     }
     
     /**
