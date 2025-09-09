@@ -162,11 +162,18 @@ class ArrayMemoryStorage
      */
     protected static function intHash(string $key)
     {
-        $binhash = md5($key, true);
-        $numhash = unpack('N2', $binhash);
-        $hash = $numhash[1] . $numhash[2];
-        $hash = substr($hash, 0, 20);
-
-        return (int) $hash;
+        // Use CRC32 for simple, fast, collision-resistant hashing
+        // CRC32 produces a 32-bit unsigned integer, which is safe for all PHP systems
+        $hash = crc32($key);
+        
+        // Ensure positive result (CRC32 can return negative on 32-bit systems)
+        $hash = abs($hash);
+        
+        // Ensure non-zero result (empty string gives 0)
+        if ($hash === 0) {
+            $hash = 1;
+        }
+        
+        return $hash;
     }
 }
